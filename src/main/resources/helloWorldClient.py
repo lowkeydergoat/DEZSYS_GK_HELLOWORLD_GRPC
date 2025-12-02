@@ -1,22 +1,40 @@
-import sys
 import grpc
-
-import hello_pb2 as hello_pb2
-import hello_pb2_grpc as hello_pb2_grpc
+import hello_pb2
+import hello_pb2_grpc
 
 
 def main():
-    firstname = sys.argv[1] if len(sys.argv) > 1 else "Max"
-    lastname = sys.argv[2] if len(sys.argv) > 2 else "Mustermann"
+    channel = grpc.insecure_channel("localhost:50051")
+    stub = hello_pb2_grpc.WarehouseServiceStub(channel)
 
-    # Connect to server
-    with grpc.insecure_channel("localhost:50051") as channel:
-        stub = hello_pb2_grpc.HelloWorldServiceStub(channel)
-        request = hello_pb2.HelloRequest(firstname=firstname, lastname=lastname)
-        response = stub.hello(request)
-        print()
-        print(response.text)
-        print()
+    req = hello_pb2.WarehouseRequest(
+        warehouseID="1001",
+        warehouseName="stefan kordov",
+        timestamp="2025-12-02",
+        warehouseCountry="AT",
+        warehouseCity="Vienna",
+        address="wexstrasse 19",
+        productData=[
+            hello_pb2.ProductData(
+                productId="1",
+                productName="mario",
+                productCategory="human",
+                productAmount="999",
+                productUnit="kg"
+            )
+        ]
+    )
+
+    # RPC call
+    try:
+        data = stub.GetWarehouseData(req)
+        print(data)
+
+    except grpc.RpcError as e:
+        print("error")
+
+    channel.close()
+
 
 if __name__ == "__main__":
     main()
